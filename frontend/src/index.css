@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply text-slate-800 antialiased;
+}
+
+/* Nội dung câu trả lời (markdown) */
+.answer p {
+  @apply my-1.5 leading-relaxed;
+}
+.answer ul {
+  @apply my-1.5 list-disc space-y-1 pl-5;
+}
+.answer ol {
+  @apply my-1.5 list-decimal space-y-1 pl-5;
+}
+.answer strong {
+  @apply font-semibold text-slate-900;
+}
+.answer a {
+  @apply text-brand-600 underline;
+}
+
+.flag-weak,
+.flag-unsupported {
+  @apply underline decoration-amber-400 decoration-2 underline-offset-4;
+}
+.flag-unsupported {
+  @apply decoration-wavy;
+}
+
+.scroll-thin {
+  scrollbar-width: thin;
+}
+.scroll-dark {
+  scrollbar-color: rgb(255 255 255 / 0.18) transparent;
+}
+
+.caret::after {
+  content: '▍';
+  @apply ml-0.5 animate-pulse text-brand-500;
+}

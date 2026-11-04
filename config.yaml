@@ -1,0 +1,96 @@
+# Cấu hình ViLex-ANND. Mọi tham số chạy ablation đọc từ đây (không hard-code).
+# Ghi đè bằng biến môi trường: EMBED_MODEL, RERANK_MODEL, LLM_BASE_URL, LLM_MODEL,
+# LLM_PROVIDER, INDEX_DIR, RERANK_THRESHOLD, TOP_K, USE_DENSE, USE_RERANK, DEVICE.
+# Đổi cả file: VILEX_CONFIG=/đường/dẫn/config.yaml
+
+paths:
+  raw_dir: data/raw
+  registry: data/registry.csv
+  chunks: data/processed/chunks.jsonl
+  articles: data/processed/articles.jsonl
+  index_dir: index            # index thật nằm ở index/<tên embed model>/
+  log_dir: logs
+  prompts_dir: prompts
+  frontend_dist: frontend/dist
+  app_dir: appdata            # dữ liệu lúc chạy: tài khoản, hội thoại, văn bản tải lên (không đồng bộ từ laptop)
+
+chunking:
+  min_article_tokens: 300     # Điều ngắn hơn -> giữ nguyên cả Điều
+  max_clause_tokens: 700      # Khoản dài hơn -> tách theo điểm
+  max_intro_tokens: 120       # câu dẫn của Điều được ghép vào text_for_embed nếu ngắn hơn
+  tokenizer: heuristic        # heuristic | tên tokenizer HF (vd BAAI/bge-m3)
+
+retrieval:
+  use_router: true
+  use_bm25: true
+  use_dense: true
+  use_rerank: true
+  bm25_tokenizer: underthesea # underthesea | pyvi | simple
+  bm25_top_k: 30
+  dense_top_k: 30
+  rrf_k: 60
+  fusion_top_k: 20
+  top_k: 5
+  rerank_threshold: 0.05      # τ — dò trên dev 04/11/2026 (eval/results/tau_calibration.csv): mọi τ 0,05–0,70 đạt
+                              # balanced acc 1,0; quy tắc chọn: cao nhất, hoà thì lấy nhỏ nhất. Trên test, câu ngoài
+                              # phạm vi có điểm cao nhất 0,024 — biên an toàn mỏng, cần theo dõi khi mở rộng kho
+  expired_penalty: 0.85       # nhân vào điểm của chunk het_hieu_luc
+  parent_expansion: true      # >= 2 chunk cùng một Điều -> gộp thành nguyên Điều
+  parent_max_tokens: 1500     # Điều dài hơn thì chỉ nối các chunk trúng, không lấy cả Điều
+  router_default_doc_id: null # Điều không ghi văn bản -> dùng văn bản này (null = tìm kiếm thường)
+
+models:
+  embed_model: BAAI/bge-m3
+  embed_query_prefix: ""      # vd "query: " với model họ E5
+  embed_passage_prefix: ""
+  embed_word_segment: false   # true nếu model cần input đã tách từ (pyvi)
+  embed_max_length: 1024
+  embed_batch_size: 32
+  rerank_model: BAAI/bge-reranker-v2-m3
+  rerank_max_length: 1024
+  rerank_batch_size: 20
+  device: cuda                # cuda | cpu (tự lùi về cpu nếu không có GPU)
+  fp16: true
+
+llm:
+  provider: openai            # openai (vLLM / llama-server) | echo (trích xuất, không cần LLM — để dev/test)
+  base_url: http://localhost:8000/v1
+  model: qwen3.6-35b-a3b      # = --served-model-name khi chạy vLLM
+  api_key: EMPTY
+  temperature: 0.15
+  max_tokens: 800
+  enable_thinking: false
+  timeout: 180
+  max_history_turns: 6
+
+verify:
+  weak_threshold: 0.20        # điểm reranker (câu, chunk) dưới ngưỡng -> weak
+
+api:
+  cors_origins:
+    - http://localhost:5173
+    - http://127.0.0.1:5173
+
+# Vai trò -> các mức access_level được xem. Giảng viên xem thêm văn bản nội bộ.
+roles:
+  hoc_vien: [public]
+  giang_vien: [public, internal]
+
+auth:
+  token_ttl_hours: 12
+  # Tài khoản mặc định: tạo khi khởi động nếu chưa có (mật khẩu được băm PBKDF2 vào appdata/users.json).
+  seed_users:
+    - {username: hocviens1, password: abc123, role: hoc_vien, display_name: Học viên S1}
+    - {username: giangviens1, password: abc123, role: giang_vien, display_name: Giảng viên S1}
+
+upload:
+  allowed_roles: [giang_vien]  # vai trò được thêm/xoá dữ liệu
+  max_mb: 30
+  extensions: [.docx, .pdf, .txt, .md]
+
+suggested_questions:
+  - Điều 7 Nghị định 125/2026/NĐ-CP quy định gì?
+  - Giảng viên tham gia nghiên cứu khoa học được giảm định mức giờ chuẩn như thế nào?
+  - Sinh viên làm nghiên cứu khoa học được hỗ trợ gì?
+  - Nghị định 109/2022/NĐ-CP còn hiệu lực không?
+  - Điều kiện thành lập tổ chức khoa học và công nghệ trong trường đại học gồm những gì?

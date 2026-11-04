@@ -1,0 +1,5 @@
+# Colab GPU: thêm model embedding/reranker. torch đi kèm vLLM (cài riêng: pip install -U vllm)
+-r requirements.txt
+sentence-transformers>=3.0
+transformers>=4.45
+pyvi>=0.1.1

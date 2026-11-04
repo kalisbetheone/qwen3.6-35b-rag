@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+*.egg-info/
+
+# Sinh ra khi chạy (dựng lại được bằng ingest / build_index / eval)
+data/processed/
+index/
+logs/
+hf_cache/
+eval/results/
+appdata/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+
+# Bí mật và rác hệ điều hành
+.env
+.env.*
+Thumbs.db
+.DS_Store
